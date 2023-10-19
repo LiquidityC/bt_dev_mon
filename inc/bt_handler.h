@@ -6,4 +6,3 @@
 bool bt_ping(const char *remote);
 
 #endif // _BT_HANDLER_H_
-

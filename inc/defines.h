@@ -5,5 +5,4 @@ typedef unsigned char u8;
 typedef int i32;
 typedef unsigned int u32;
 
-#endif  // _DEFINES_H_
-
+#endif // _DEFINES_H_

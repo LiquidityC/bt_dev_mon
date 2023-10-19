@@ -18,6 +18,35 @@ OBJDIR	= .obj
 DOCDIR	= doc
 MANDIR	= doc/man
 
+# This is taken from the kernel build system because I like the way it looks
+ifneq ($(silent),1)
+  ifneq ($(V),1)
+	QUIET_CC       = @echo '  CC      '$@;
+	QUIET_CC_FPIC  = @echo '  CC FPIC '$@;
+	QUIET_CLANG    = @echo '  CLANG   '$@;
+	QUIET_AR       = @echo '  AR      '$@;
+	QUIET_LINK     = @echo '  LINK    '$@;
+	QUIET_MKDIR    = @echo '  MKDIR   '$@;
+	QUIET_GEN      = @echo '  GEN     '$@;
+	QUIET_SUBDIR0  = +@subdir=
+	QUIET_SUBDIR1  = ;$(NO_SUBDIR) \
+			  echo '  SUBDIR  '$$subdir; \
+			 $(MAKE) $(PRINT_DIR) -C $$subdir
+	QUIET_FLEX     = @echo '  FLEX    '$@;
+	QUIET_BISON    = @echo '  BISON   '$@;
+	QUIET_GENSKEL  = @echo '  GENSKEL '$@;
+
+	descend = \
+		+@echo	       '  DESCEND '$(1); \
+		mkdir -p $(OUTPUT)$(1) && \
+		$(MAKE) $(COMMAND_O) subdir=$(if $(subdir),$(subdir)/$(1),$(1)) $(PRINT_DIR) -C $(1) $(2)
+
+	QUIET_CLEAN    = @printf '  CLEAN   %s\n' $1;
+	QUIET_INSTALL  = @printf '  INSTALL %s\n' $1;
+	QUIET_UNINST   = @printf '  UNINST  %s\n' $1;
+  endif
+endif
+
 ifndef RELEASE_BUILD
 	CFLAGS += -DDEBUG_BUILD -Wall -g -fsanitize=address -fno-omit-frame-pointer
 else
@@ -35,18 +64,21 @@ default: $(MODULE)
 
 all: $(MODULE) $(MANFILES)
 
-$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	@$(MKDIR) -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJDIR):
+	$(QUIET_MKDIR)$(MKDIR) -p $@
 
-$(MODULE): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.c
+	$(QUIET_CC)$(CC) $(CFLAGS) -c $< -o $@
+
+$(MODULE): $(OBJDIR) $(OBJ)
+	$(QUIET_LINK)$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
 
 run: $(MODULE)
 	@./$(MODULE)
 
 clean:
-	$(RM) -rf $(OBJ) $(MODULE) $(MANFILES) $(PREFIX) $(OBJDIR) $(MANDIR)
+	$(call QUIET_CLEAN, $(MODULE))
+	@$(RM) -rf $(OBJ) $(MODULE) $(MANFILES) $(PREFIX) $(OBJDIR) $(MANDIR)
 
 fmt:
 	@$(FORMAT) -i src/*.c inc/*.h
@@ -57,17 +89,14 @@ check:
 	@$(CHECK) -x c --std=c11 -Iinc -i/usr/include --enable=all --suppress=missingIncludeSystem .
 
 $(MANFILES): $(MDFILES)
-	@mkdir -p $(MANDIR)
+	$(QUIET_MKDIR)$(MKDIR) -p $(MANDIR)
 	$(PANDOC) $< -s -t man -o $@
 
 man: $(MANFILES)
 
 install: $(MODULE) $(MANFILES)
+	$(call QUIET_INSTALL, $(PREFIX)/bin/$(MODULE))
 	@$(MKDIR) -p $(PREFIX)/bin
-	@$(MKDIR) -p $(PREFIX)/share/man/man1
-	@$(ECHO) "Installing binary : $(PREFIX)/bin/$(MODULE)"
-	@$(CP) -v $(MODULE) $(PREFIX)/bin/$(MODULE)
-	@$(ECHO) "Installing man files"
-	@$(CP) -v $(MANDIR)/*.1 $(PREFIX)/share/man/man1/
+	@$(CP) $(MODULE) $(PREFIX)/bin/$(MODULE)
 
 .PHONY: $(MODULE) clean all fmt run check install

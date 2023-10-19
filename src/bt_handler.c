@@ -157,8 +157,7 @@ bool bt_ping(const char *remote)
 			break;
 		}
 
-		if ((err = recv(fd, recv_buf, L2CAP_CMD_HDR_SIZE + BUF_SIZE,
-				0)) < 0) {
+		if ((err = recv(fd, recv_buf, L2CAP_CMD_HDR_SIZE + BUF_SIZE, 0)) < 0) {
 			perror("recv");
 			goto out;
 		}

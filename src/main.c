@@ -49,11 +49,9 @@ static void *thread_exec(void *args)
 	while (!quit) {
 		for (size_t i = 0; i < device_count; ++i) {
 			if (bt_ping(devices[i].bdaddr)) {
-				printf("Device: %s (%s) found\n",
-				       devices[i].label, devices[i].bdaddr);
+				printf("Device: %s (%s) found\n", devices[i].label, devices[i].bdaddr);
 			} else {
-				printf("Device: %s (%s) not found\n",
-				       devices[i].label, devices[i].bdaddr);
+				printf("Device: %s (%s) not found\n", devices[i].label, devices[i].bdaddr);
 			}
 		}
 

@@ -1,22 +1,23 @@
 VERSION = \"1.0.0\"
 
+PREFIX ?= out
+INCDIR	= inc
+SRCDIR	= src
+LANG	= c
+OBJDIR	= .obj
+DOCDIR	= doc
+MANDIR	= doc/man
+
+MODULE		= bt_mon
 CC			= gcc
 LDFLAGS		= -lbluetooth
-CFLAGS		= -Iinc -DVERSION=$(VERSION)
+CFLAGS		= -I$(INCDIR) -DVERSION=$(VERSION)
 RM			= rm
-MODULE		= bt_mon
 FORMAT		= clang-format
 CHECK		= cppcheck
 CP			= cp
 ECHO		= echo
 MKDIR		= mkdir
-PANDOC		= pandoc
-
-PREFIX ?= out
-SRCDIR	= src
-OBJDIR	= .obj
-DOCDIR	= doc
-MANDIR	= doc/man
 
 # This is taken from the kernel build system because I like the way it looks
 ifneq ($(silent),1)
@@ -54,8 +55,8 @@ else
 	OBJDIR = .objrls
 endif
 
-SRC = $(wildcard $(SRCDIR)/*.c)
-OBJ = $(subst $(SRCDIR)/,$(OBJDIR)/,$(patsubst %.c,%.o,$(SRC)))
+SRC = $(wildcard $(SRCDIR)/*.$(LANG))
+OBJ = $(subst $(SRCDIR)/,$(OBJDIR)/,$(patsubst %.$(LANG),%.o,$(SRC)))
 
 MDFILES = $(wildcard $(DOCDIR)/mon.*.md)
 MANFILES = $(subst $(DOCDIR)/,$(MANDIR)/,$(patsubst $(DOCDIR)/%.md,$(DOCDIR)/%, $(MDFILES)))
@@ -67,7 +68,7 @@ all: $(MODULE) $(MANFILES)
 $(OBJDIR):
 	$(QUIET_MKDIR)$(MKDIR) -p $@
 
-$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJ): $(OBJDIR)/%.o: $(SRCDIR)/%.$(LANG)
 	$(QUIET_CC)$(CC) $(CFLAGS) -c $< -o $@
 
 $(MODULE): $(OBJDIR) $(OBJ)
@@ -81,16 +82,12 @@ clean:
 	@$(RM) -rf $(OBJ) $(MODULE) $(MANFILES) $(PREFIX) $(OBJDIR) $(MANDIR)
 
 fmt:
-	@$(FORMAT) -i src/*.c inc/*.h
+	@$(FORMAT) -i $(SRCDIR)/*.$(LANG) inc/*.h
 
 check:
 	@$(ECHO) "Checking formatting"
-	@$(FORMAT) --dry-run -Werror src/*.[ch]
+	@$(FORMAT) --dry-run -Werror $(SRCDIR)/*.[ch]
 	@$(CHECK) -x c --std=c11 -Iinc -i/usr/include --enable=all --suppress=missingIncludeSystem .
-
-$(MANFILES): $(MDFILES)
-	$(QUIET_MKDIR)$(MKDIR) -p $(MANDIR)
-	$(PANDOC) $< -s -t man -o $@
 
 man: $(MANFILES)
 

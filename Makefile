@@ -58,12 +58,9 @@ endif
 SRC = $(wildcard $(SRCDIR)/*.$(LANG))
 OBJ = $(subst $(SRCDIR)/,$(OBJDIR)/,$(patsubst %.$(LANG),%.o,$(SRC)))
 
-MDFILES = $(wildcard $(DOCDIR)/mon.*.md)
-MANFILES = $(subst $(DOCDIR)/,$(MANDIR)/,$(patsubst $(DOCDIR)/%.md,$(DOCDIR)/%, $(MDFILES)))
-
 default: $(MODULE)
 
-all: $(MODULE) $(MANFILES)
+all: $(MODULE)
 
 $(OBJDIR):
 	$(QUIET_MKDIR)$(MKDIR) -p $@
@@ -79,17 +76,15 @@ run: $(MODULE)
 
 clean:
 	$(call QUIET_CLEAN, $(MODULE))
-	@$(RM) -rf $(OBJ) $(MODULE) $(MANFILES) $(PREFIX) $(OBJDIR) $(MANDIR)
+	@$(RM) -rf $(OBJ) $(MODULE) $(PREFIX) $(OBJDIR)
 
 fmt:
-	@$(FORMAT) -i $(SRCDIR)/*.$(LANG) inc/*.h
+	@$(FORMAT) -i $(SRCDIR)/*.$(LANG) $(INCDIR)/*.h
 
 check:
 	@$(ECHO) "Checking formatting"
 	@$(FORMAT) --dry-run -Werror $(SRCDIR)/*.[ch]
 	@$(CHECK) -x c --std=c11 -Iinc -i/usr/include --enable=all --suppress=missingIncludeSystem .
-
-man: $(MANFILES)
 
 install: $(MODULE) $(MANFILES)
 	$(call QUIET_INSTALL, $(PREFIX)/bin/$(MODULE))

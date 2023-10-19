@@ -64,19 +64,19 @@ static i32 socket_connect(const char *remote)
 			};
 
 			fd_set wait_set;
-            i32 res;
+			i32 res;
 
 			FD_ZERO(&wait_set);
 			FD_SET(fd, &wait_set);
 
-            res = select(fd + 1, NULL, &wait_set, NULL, &timeout);
-            if (res < 0) {
-                perror("select");
-                goto error;
-            } else if (res == 0) {
-                /* Timeout */
-                goto error;
-            }
+			res = select(fd + 1, NULL, &wait_set, NULL, &timeout);
+			if (res < 0) {
+				perror("select");
+				goto error;
+			} else if (res == 0) {
+				/* Timeout */
+				goto error;
+			}
 		} else {
 			perror("connect");
 			goto error;

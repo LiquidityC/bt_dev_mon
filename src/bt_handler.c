@@ -51,7 +51,6 @@ bool bt_ping(const char *remote)
 	addr.l2_family = AF_BLUETOOTH;
 	str2ba(remote, &addr.l2_bdaddr);
 
-	printf("Connecting: %s\n", remote);
 	if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		perror("connect");
 		goto out;
@@ -68,8 +67,6 @@ bool bt_ping(const char *remote)
 
 	char local[18];
 	ba2str(&addr.l2_bdaddr, local);
-
-	printf("Ping: %s => %s (data size %d) ...\n", local, remote, BUF_SIZE);
 
 	/* Init send buffer */
 	for (size_t i = 0; i < BUF_SIZE; ++i) {
@@ -129,7 +126,6 @@ bool bt_ping(const char *remote)
 
 		/* Check type */
 		if (recv_cmd->code == L2CAP_ECHO_RSP) {
-			printf("Got response from %s\n", remote);
 			response = true;
 			break;
 		}

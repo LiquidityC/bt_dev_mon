@@ -13,9 +13,12 @@
 
 #include "defines.h"
 #include "bt_handler.h"
+#include "file_reader.h"
 
 #define INTERVAL_MIN 15
 #define INTERVAL_SEC (INTERVAL_MIN * 60)
+
+#define CONFIG_FPATH "config.txt"
 
 #define handle_error_en(en, msg)    \
 	do {                        \
@@ -24,7 +27,7 @@
 		exit(EXIT_FAILURE); \
 	} while (0)
 
-#define handle_error(en, msg)       \
+#define handle_error(msg)           \
 	do {                        \
 		perror(msg);        \
 		exit(EXIT_FAILURE); \
@@ -36,9 +39,23 @@ static void *thread_exec(void *args)
 {
 	(void)args;
 
+	size_t device_count;
+	BTDevice *devices = read_config_file(CONFIG_FPATH, &device_count);
+	if (devices == NULL) {
+		handle_error("read_config_file");
+	}
+
 	printf("Launching thread\n");
 	while (!quit) {
-		bt_ping("B8:90:47:25:49:00");
+		for (size_t i = 0; i < device_count; ++i) {
+			if (bt_ping(devices[i].bdaddr)) {
+				printf("Device: %s (%s) found\n",
+				       devices[i].label, devices[i].bdaddr);
+			} else {
+				printf("Device: %s (%s) not found\n",
+				       devices[i].label, devices[i].bdaddr);
+			}
+		}
 
 		for (size_t i = 0; i < INTERVAL_SEC; ++i) {
 			sleep(1);
@@ -47,6 +64,8 @@ static void *thread_exec(void *args)
 		}
 		printf("\n");
 	}
+
+	free(devices);
 
 	return NULL;
 }

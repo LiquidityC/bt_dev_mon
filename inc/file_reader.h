@@ -6,6 +6,14 @@
 #include "defines.h"
 #include "common.h"
 
+#ifdef RELEASE_BUILD
+#define CONFIG_FOLDER "/etc/bt_mon/"
+#else
+#define CONFIG_FOLDER "./"
+#endif
+
+#define CONFIG_FILE_PATH CONFIG_FOLDER "bt_dev_mon.conf"
+
 /**
  * \brief Read config file
  *

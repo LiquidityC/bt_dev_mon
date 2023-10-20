@@ -33,6 +33,12 @@
 		exit(EXIT_FAILURE); \
 	} while (0)
 
+#define abort_exec(code, msg)                 \
+	do {                                  \
+		fprintf(stderr, "%s\n", msg); \
+		exit(code);                   \
+	} while (0)
+
 static atomic_int quit = 0;
 
 static void *thread_exec(void *args)
@@ -43,6 +49,9 @@ static void *thread_exec(void *args)
 	BTDevice *devices = read_config_file(CONFIG_FPATH, &device_count);
 	if (devices == NULL) {
 		handle_error("read_config_file");
+	} else if (device_count == 0) {
+		free(devices);
+		abort_exec(EXIT_SUCCESS, "No devices in config");
 	}
 
 	printf("Launching thread\n");
